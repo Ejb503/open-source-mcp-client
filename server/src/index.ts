@@ -121,6 +121,7 @@ app.post("/message", async (req, res) => {
   try {
     const sessionId = req.query.sessionId;
     console.log(`Received message for sessionId ${sessionId}`);
+    console.log(req.body);
 
     const transport = webAppTransports.find((t) => t.sessionId === sessionId);
     if (!transport) {

@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Play, ChevronDown, ChevronRight } from "lucide-react";
+import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,20 +9,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StdErrNotification } from "@/lib/notificationTypes";
-
 import useTheme from "../lib/useTheme";
-import { version } from "../../../package.json";
 
 interface SidebarProps {
   connectionStatus: "disconnected" | "connected" | "error";
-  transportType: "stdio" | "sse";
-  setTransportType: (type: "stdio" | "sse") => void;
-  command: string;
-  setCommand: (command: string) => void;
-  args: string;
-  setArgs: (args: string) => void;
-  sseUrl: string;
-  setSseUrl: (url: string) => void;
+  transportType: "sse";
+  apikey: string;
+  setApikey: (url: string) => void;
   env: Record<string, string>;
   setEnv: (env: Record<string, string>) => void;
   onConnect: () => void;
@@ -33,27 +25,19 @@ interface SidebarProps {
 const Sidebar = ({
   connectionStatus,
   transportType,
-  setTransportType,
-  command,
-  setCommand,
-  args,
-  setArgs,
-  sseUrl,
-  setSseUrl,
-  env,
-  setEnv,
+  apikey,
+  setApikey,
   onConnect,
   stdErrNotifications,
 }: SidebarProps) => {
   const [theme, setTheme] = useTheme();
-  const [showEnvVars, setShowEnvVars] = useState(false);
 
   return (
     <div className="w-80 bg-card border-r border-border flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <div className="flex items-center">
           <h1 className="ml-2 text-lg font-semibold">
-            MCP Inspector v{version}
+            {theme === "dark" ? <img src="logo.png" /> : <img src="darklogo.png" />}
           </h1>
         </div>
       </div>
@@ -63,116 +47,25 @@ const Sidebar = ({
           <div className="space-y-2">
             <label className="text-sm font-medium">Transport Type</label>
             <Select
-              value={transportType}
-              onValueChange={(value: "stdio" | "sse") =>
-                setTransportType(value)
-              }
-            >
+            disabled
+              value={transportType}            >
               <SelectTrigger>
                 <SelectValue placeholder="Select transport type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="stdio">STDIO</SelectItem>
                 <SelectItem value="sse">SSE</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {transportType === "stdio" ? (
-            <>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Command</label>
-                <Input
-                  placeholder="Command"
-                  value={command}
-                  onChange={(e) => setCommand(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Arguments</label>
-                <Input
-                  placeholder="Arguments (space-separated)"
-                  value={args}
-                  onChange={(e) => setArgs(e.target.value)}
-                />
-              </div>
-            </>
-          ) : (
             <div className="space-y-2">
-              <label className="text-sm font-medium">URL</label>
+              <label className="text-sm font-medium">API Key</label>
               <Input
-                placeholder="URL"
-                value={sseUrl}
-                onChange={(e) => setSseUrl(e.target.value)}
+                placeholder="API Key"
+                value={apikey}
+                onChange={(e) => setApikey(e.target.value)}
               />
             </div>
-          )}
-          {transportType === "stdio" && (
-            <div className="space-y-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowEnvVars(!showEnvVars)}
-                className="flex items-center w-full"
-              >
-                {showEnvVars ? (
-                  <ChevronDown className="w-4 h-4 mr-2" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 mr-2" />
-                )}
-                Environment Variables
-              </Button>
-              {showEnvVars && (
-                <div className="space-y-2">
-                  {Object.entries(env).map(([key, value], idx) => (
-                    <div key={idx} className="grid grid-cols-[1fr,auto] gap-2">
-                      <div className="space-y-1">
-                        <Input
-                          placeholder="Key"
-                          value={key}
-                          onChange={(e) => {
-                            const newEnv = { ...env };
-                            delete newEnv[key];
-                            newEnv[e.target.value] = value;
-                            setEnv(newEnv);
-                          }}
-                        />
-                        <Input
-                          placeholder="Value"
-                          value={value}
-                          onChange={(e) => {
-                            const newEnv = { ...env };
-                            newEnv[key] = e.target.value;
-                            setEnv(newEnv);
-                          }}
-                        />
-                      </div>
-                      <Button
-                        variant="destructive"
-                        onClick={() => {
-                          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                          const { [key]: removed, ...rest } = env;
-                          setEnv(rest);
-                        }}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      const newEnv = { ...env };
-                      newEnv[""] = "";
-                      setEnv(newEnv);
-                    }}
-                  >
-                    Add Environment Variable
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-
           <div className="space-y-2">
             <Button className="w-full" onClick={onConnect}>
               <Play className="w-4 h-4 mr-2" />

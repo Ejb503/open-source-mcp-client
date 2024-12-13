@@ -35,9 +35,7 @@ import {
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Bell,
   Files,
-  FolderTree,
   Hammer,
   Hash,
   MessageSquare,
@@ -58,6 +56,7 @@ import ToolsTab from "./components/ToolsTab";
 
 type ServerCapabilities = z.infer<typeof ServerCapabilitiesSchema>;
 
+const SERVER_URL = process.env.SERVER ?? "https://api.systemprompt.io/v1/mcp/";
 const DEFAULT_REQUEST_TIMEOUT_MSEC = 10000;
 
 const params = new URLSearchParams(window.location.search);
@@ -93,8 +92,9 @@ const App = () => {
     return localStorage.getItem("lastArgs") || "";
   });
 
-  const [sseUrl, setSseUrl] = useState<string>("http://localhost:3001/sse");
-  const [transportType, setTransportType] = useState<"stdio" | "sse">("stdio");
+  const [apikey, setApikey] = useState<string>(`22bb58e99be3b1c49e6af5a2c5c524b3`);
+  const sseUrl = `${SERVER_URL}${apikey}`
+  const transportType = "sse";
   const [requestHistory, setRequestHistory] = useState<
     { request: string; response?: string }[]
   >([]);
@@ -428,13 +428,7 @@ const App = () => {
       const backendUrl = new URL(`${PROXY_SERVER_URL}/sse`);
 
       backendUrl.searchParams.append("transportType", transportType);
-      if (transportType === "stdio") {
-        backendUrl.searchParams.append("command", command);
-        backendUrl.searchParams.append("args", args);
-        backendUrl.searchParams.append("env", JSON.stringify(env));
-      } else {
         backendUrl.searchParams.append("url", sseUrl);
-      }
 
       const clientTransport = new SSEClientTransport(backendUrl);
       client.setNotificationHandler(
@@ -487,14 +481,9 @@ const App = () => {
     <div className="flex h-screen bg-background">
       <Sidebar
         connectionStatus={connectionStatus}
+        apikey={apikey}
+        setApikey={setApikey}
         transportType={transportType}
-        setTransportType={setTransportType}
-        command={command}
-        setCommand={setCommand}
-        args={args}
-        setArgs={setArgs}
-        sseUrl={sseUrl}
-        setSseUrl={setSseUrl}
         env={env}
         setEnv={setEnv}
         onConnect={connectMcpServer}
@@ -528,10 +517,6 @@ const App = () => {
                   <Hammer className="w-4 h-4 mr-2" />
                   Tools
                 </TabsTrigger>
-                <TabsTrigger value="ping">
-                  <Bell className="w-4 h-4 mr-2" />
-                  Ping
-                </TabsTrigger>
                 <TabsTrigger value="sampling" className="relative">
                   <Hash className="w-4 h-4 mr-2" />
                   Sampling
@@ -540,10 +525,6 @@ const App = () => {
                       {pendingSampleRequests.length}
                     </span>
                   )}
-                </TabsTrigger>
-                <TabsTrigger value="roots">
-                  <FolderTree className="w-4 h-4 mr-2" />
-                  Roots
                 </TabsTrigger>
               </TabsList>
 

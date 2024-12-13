@@ -13,11 +13,29 @@ export default function mcpProxy({
   let transportToServerClosed = false;
 
   transportToClient.onmessage = (message) => {
-    transportToServer.send(message).catch(onerror);
+    try {
+      console.log('Client -> Server:', JSON.stringify(message, null, 2));
+      transportToServer.send(message).catch((error) => {
+        console.error('Error sending message to server:', error);
+        onerror(error);
+      });
+    } catch (error) {
+      console.error('Error processing client message:', error);
+      onerror(error as Error);
+    }
   };
 
   transportToServer.onmessage = (message) => {
-    transportToClient.send(message).catch(onerror);
+    try {
+      console.log('Server -> Client:', JSON.stringify(message, null, 2));
+      transportToClient.send(message).catch((error) => {
+        console.error('Error sending message to client:', error);
+        onerror(error);
+      });
+    } catch (error) {
+      console.error('Error processing server message:', error);
+      onerror(error as Error);
+    }
   };
 
   transportToClient.onclose = () => {
